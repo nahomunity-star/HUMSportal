@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import Login from "./pages/Login.jsx";
+import UpdatePassword from "./pages/UpdatePassword.jsx";
+import AdminPasswordReset from "./pages/AdminPasswordReset.jsx";
 import Dashboard from "./pages/Dashboared.jsx";
 import Scores from "./pages/Scores.jsx";
 import Schedule from "./data/schedule.jsx";
@@ -27,14 +29,18 @@ import { getSupabase, isSupabaseConfigured } from "./data/supabaseClient.js";
 
 function reportCloudError(error) {
   const message =
-    error instanceof Error ? error.message : "An unexpected cloud database error occurred.";
+    error instanceof Error
+      ? error.message
+      : "An unexpected cloud database error occurred.";
   window.dispatchEvent(new CustomEvent("hums-cloud-error", { detail: message }));
 }
 
 function AdminRoute({ children }) {
   const [status, setStatus] = useState("loading");
+
   useEffect(() => {
     let active = true;
+
     async function verifyAdmin() {
       try {
         const { data, error } = await getSupabase().auth.getSession();
@@ -54,22 +60,36 @@ function AdminRoute({ children }) {
         if (active) setStatus("error");
       }
     }
+
     verifyAdmin();
     return () => {
       active = false;
     };
   }, []);
 
-  if (status === "loading") return <p role="status">Checking administrator access…</p>;
-  if (status === "unauthorized") return <Navigate to="/admin-login" replace />;
-  if (status === "error") return <p role="alert">Could not verify administrator access. Check the database setup and try again.</p>;
+  if (status === "loading") {
+    return <p role="status">Checking administrator access…</p>;
+  }
+  if (status === "unauthorized") {
+    return <Navigate to="/admin-login" replace />;
+  }
+  if (status === "error") {
+    return (
+      <p role="alert">
+        Could not verify administrator access. Check the database setup and try
+        again.
+      </p>
+    );
+  }
   return children;
 }
 
 function StudentRoute({ children }) {
   const [status, setStatus] = useState("loading");
+
   useEffect(() => {
     let active = true;
+
     async function verifyStudent() {
       try {
         const { data, error } = await getSupabase().auth.getSession();
@@ -100,16 +120,29 @@ function StudentRoute({ children }) {
         if (active) setStatus("error");
       }
     }
+
     verifyStudent();
     return () => {
       active = false;
     };
   }, []);
 
-  if (status === "loading") return <p role="status">Loading your school account…</p>;
-  if (status === "unauthorized") return <Navigate to="/" replace />;
-  if (status === "admin") return <Navigate to="/admin" replace />;
-  if (status === "error") return <p role="alert">Could not load your shared school account. Try again later.</p>;
+  if (status === "loading") {
+    return <p role="status">Loading your school account…</p>;
+  }
+  if (status === "unauthorized") {
+    return <Navigate to="/" replace />;
+  }
+  if (status === "admin") {
+    return <Navigate to="/admin" replace />;
+  }
+  if (status === "error") {
+    return (
+      <p role="alert">
+        Could not load your shared school account. Try again later.
+      </p>
+    );
+  }
   return children;
 }
 
@@ -164,7 +197,9 @@ function CloudSync() {
         syncInProgress ||
         timer !== undefined ||
         localStorage.getItem("humsImportIncomplete") === "true"
-      ) return;
+      ) {
+        return;
+      }
       refreshInProgress = true;
       try {
         const { data, error } = await getSupabase().auth.getSession();
@@ -176,7 +211,8 @@ function CloudSync() {
         refreshInProgress = false;
       }
     };
-    const { data: authSubscription } = isSupabaseConfigured()
+
+    const { data: authData } = isSupabaseConfigured()
       ? getSupabase().auth.onAuthStateChange((event) => {
           if (event === "SIGNED_OUT") void clearPortalCache();
         })
@@ -191,7 +227,7 @@ function CloudSync() {
     return () => {
       window.clearTimeout(timer);
       window.clearTimeout(syncedTimer);
-      authSubscription?.subscription?.unsubscribe();
+      authData?.subscription?.unsubscribe();
       window.removeEventListener("hums-cloud-error", showError);
       window.removeEventListener("hums-cloud-synced", showSynced);
       window.removeEventListener("hums-records-updated", syncRecords);
@@ -204,7 +240,11 @@ function CloudSync() {
   return message ? (
     <div className="cloud-error-banner" role="alert">
       <span>{message}</span>
-      <button type="button" onClick={() => setMessage("")} aria-label="Dismiss database error">
+      <button
+        type="button"
+        onClick={() => setMessage("")}
+        aria-label="Dismiss database error"
+      >
         ×
       </button>
     </div>
@@ -223,59 +263,126 @@ function App() {
       <CloudSync />
       <Routes>
         <Route path="/" element={<Login />} />
-        <Route path="/dashboard" element={<StudentRoute><Dashboard /></StudentRoute>} />
-        <Route path="/scores" element={<StudentRoute><Scores /></StudentRoute>} />
-        <Route path="/schedule" element={<StudentRoute><Schedule /></StudentRoute>} />
-        <Route path="/announcements" element={<StudentRoute><Announcements /></StudentRoute>} />
-        <Route path="/teachers" element={<StudentRoute><Teachers /></StudentRoute>} />
-        <Route path="/profile" element={<StudentRoute><Profile /></StudentRoute>} />
+        <Route path="/admin-reset-password" element={<AdminPasswordReset />} />
+        <Route
+          path="/update-password"
+          element={
+            <StudentRoute>
+              <UpdatePassword />
+            </StudentRoute>
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            <StudentRoute>
+              <Dashboard />
+            </StudentRoute>
+          }
+        />
+        <Route
+          path="/scores"
+          element={
+            <StudentRoute>
+              <Scores />
+            </StudentRoute>
+          }
+        />
+        <Route
+          path="/schedule"
+          element={
+            <StudentRoute>
+              <Schedule />
+            </StudentRoute>
+          }
+        />
+        <Route
+          path="/announcements"
+          element={
+            <StudentRoute>
+              <Announcements />
+            </StudentRoute>
+          }
+        />
+        <Route
+          path="/teachers"
+          element={
+            <StudentRoute>
+              <Teachers />
+            </StudentRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <StudentRoute>
+              <Profile />
+            </StudentRoute>
+          }
+        />
         <Route path="/admin-login" element={<AdminLogin />} />
         <Route
           path="/admin"
           element={
-            <AdminRoute><AdminDashboard /></AdminRoute>
+            <AdminRoute>
+              <AdminDashboard />
+            </AdminRoute>
           }
         />
         <Route
           path="/admin/students"
           element={
-            <AdminRoute><ManageStudents /></AdminRoute>
+            <AdminRoute>
+              <ManageStudents />
+            </AdminRoute>
           }
         />
         <Route
           path="/admin/teachers"
           element={
-            <AdminRoute><ManageTeachers /></AdminRoute>
+            <AdminRoute>
+              <ManageTeachers />
+            </AdminRoute>
           }
         />
         <Route
           path="/admin/classes"
           element={
-            <AdminRoute><ManageClasses /></AdminRoute>
+            <AdminRoute>
+              <ManageClasses />
+            </AdminRoute>
           }
         />
         <Route
           path="/admin/reports"
           element={
-            <AdminRoute><ManageReports /></AdminRoute>
+            <AdminRoute>
+              <ManageReports />
+            </AdminRoute>
           }
         />
         <Route
           path="/admin/academics"
           element={
-            <AdminRoute><ManageAcademics /></AdminRoute>
+            <AdminRoute>
+              <ManageAcademics />
+            </AdminRoute>
           }
         />
         <Route
           path="/admin/announcements"
           element={
-            <AdminRoute><ManageAnnouncements /></AdminRoute>
+            <AdminRoute>
+              <ManageAnnouncements />
+            </AdminRoute>
           }
         />
         <Route
           path="/admin/schedule"
           element={
-            <AdminRoute><ManageSchedule /></AdminRoute>
+            <AdminRoute>
+              <ManageSchedule />
+            </AdminRoute>
           }
         />
         <Route path="*" element={<Navigate to="/" replace />} />

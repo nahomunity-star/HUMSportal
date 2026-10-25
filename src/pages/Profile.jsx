@@ -151,6 +151,10 @@ function Profile() {
           </div>
 
           <div className="profile-actions">
+            <button onClick={() => navigate("/update-password")}>
+              Change Password
+            </button>
+
             <button onClick={() => navigate("/scores")}>
               View My Scores
             </button>

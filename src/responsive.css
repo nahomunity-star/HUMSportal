@@ -299,53 +299,50 @@ textarea {
   }
 }
 
+.cloud-error-banner,
+.cloud-success-banner {
+  position: fixed;
+  z-index: 2000;
+  top: 16px;
+  left: 50%;
+  display: flex;
+  width: min(720px, calc(100% - 32px));
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+  transform: translateX(-50%);
+}
+
+.cloud-error-banner {
+  border: 1px solid #9f4141;
+  background: #3a1d26;
+  color: #fecaca;
+}
+
+.cloud-error-banner button {
+  flex: 0 0 auto;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.cloud-success-banner {
+  justify-content: center;
+  border: 1px solid #23734d;
+  background: #123528;
+  color: #bbf7d0;
+}
+
 @media (max-width: 540px) {
   .login-page {
     min-height: 100dvh;
     padding: 28px 14px;
-  }
-
-  .cloud-error-banner {
-    position: fixed;
-    z-index: 2000;
-    top: 12px;
-    left: 50%;
-    display: flex;
-    width: min(720px, calc(100% - 24px));
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 12px 16px;
-    border: 1px solid #9f4141;
-    border-radius: 10px;
-    background: #3a1d26;
-    color: #fecaca;
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
-    transform: translateX(-50%);
-  }
-
-  .cloud-error-banner button {
-    flex: 0 0 auto;
-    border: 0;
-    background: transparent;
-    color: inherit;
-    font: inherit;
-    font-size: 22px;
-    cursor: pointer;
-  }
-
-  .cloud-success-banner {
-    position: fixed;
-    z-index: 2000;
-    top: 12px;
-    left: 50%;
-    padding: 12px 18px;
-    border: 1px solid #23734d;
-    border-radius: 10px;
-    background: #123528;
-    color: #bbf7d0;
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
-    transform: translateX(-50%);
   }
 
   .school-brand {

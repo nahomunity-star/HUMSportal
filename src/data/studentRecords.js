@@ -4,20 +4,6 @@ const LEGACY_STUDENT_KEYS = [
   "studentData",
   "schoolStudents",
 ];
-const DEMO_STUDENT_IDS = new Set(["HUMS9001", "HUMS1001"]);
-const DEMO_STUDENT_PREFIXES = ["HUMS-2025-", "HUMS_2025_", "HUMS2025-"];
-
-function isDemoStudent(student) {
-  const studentId = String(student?.id ?? "").trim();
-
-  if (DEMO_STUDENT_IDS.has(studentId.toUpperCase())) {
-    return true;
-  }
-
-  return DEMO_STUDENT_PREFIXES.some((prefix) =>
-    studentId.toUpperCase().startsWith(prefix.toUpperCase())
-  );
-}
 
 export function readStudents() {
   const storageKey = [STUDENT_KEY, ...LEGACY_STUDENT_KEYS].find(
@@ -34,12 +20,8 @@ export function readStudents() {
       return [];
     }
 
-    const students = savedStudents.filter((student) => !isDemoStudent(student));
-
-    if (
-      storageKey !== STUDENT_KEY ||
-      students.length !== savedStudents.length
-    ) {
+    const students = savedStudents;
+    if (storageKey !== STUDENT_KEY) {
       localStorage.setItem(STUDENT_KEY, JSON.stringify(students));
     }
 

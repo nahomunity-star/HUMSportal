@@ -47,8 +47,8 @@ export default function ManageTeachers() {
       return;
     }
 
-    if (file.size > 2 * 1024 * 1024) {
-      alert("Please choose an image smaller than 2 MB.");
+    if (file.size > 512 * 1024) {
+      alert("Please choose an image smaller than 512 KB so it can be stored with the teacher record.");
       return;
     }
 
@@ -131,7 +131,10 @@ export default function ManageTeachers() {
       } catch (error) {
         window.dispatchEvent(
           new CustomEvent("hums-cloud-error", {
-            detail: error instanceof Error ? error.message : "Unable to delete teacher.",
+            detail:
+              error instanceof Error
+                ? error.message
+                : "Unable to delete teacher.",
           })
         );
         return;

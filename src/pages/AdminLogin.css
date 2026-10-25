@@ -127,6 +127,12 @@
   color: #fde68a;
 }
 
+.auth-success {
+  border: 1px solid #226b52;
+  background: #153628;
+  color: #bbf7d0;
+}
+
 .admin-login-card form button:disabled {
   cursor: not-allowed;
   opacity: 0.7;
@@ -158,6 +164,27 @@
 
 .back-student:hover {
   text-decoration: underline;
+}
+
+.forgot-password {
+  display: block;
+  margin: 16px auto 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #8eb6f2;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.forgot-password:hover {
+  color: #c5dcff;
+  text-decoration: underline;
+}
+
+.forgot-password:disabled {
+  cursor: wait;
+  opacity: 0.7;
 }
 
 @media (max-width: 600px) {

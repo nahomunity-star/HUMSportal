@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { loadPortalData } from "../data/portalCloud.js";
+import { clearPortalCache, loadPortalData } from "../data/portalCloud.js";
 import { getSupabase, studentLoginEmail } from "../data/supabaseClient.js";
 import "./Login.css";
 
@@ -23,12 +23,15 @@ function Login() {
         password,
       });
       if (signInError) {
-        throw new Error("Invalid Student ID or password, or this account is inactive.");
+        throw new Error(
+          "Invalid Student ID or password, or this account is inactive."
+        );
       }
       const rows = await loadPortalData();
       const student = rows.find((row) => row.record_type === "students");
       if (!student || String(student.grade) !== grade) {
         await getSupabase().auth.signOut();
+        await clearPortalCache();
         throw new Error(
           student
             ? "The selected grade does not match this student account."

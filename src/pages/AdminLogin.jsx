@@ -15,11 +15,13 @@ function AdminLogin() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
+    setMessage("");
     setBusy(true);
     try {
       if (username.trim().toLowerCase() !== "admin") {
@@ -35,7 +37,9 @@ function AdminLogin() {
       }
       if (!(await checkPortalAdmin())) {
         await client.auth.signOut();
-        throw new Error("This account has not been granted school administrator access.");
+        throw new Error(
+          "This account has not been granted school administrator access."
+        );
       }
 
       const { count, error: countError } = await client
@@ -54,6 +58,30 @@ function AdminLogin() {
         loginError instanceof Error
           ? loginError.message
           : "Unable to sign in. Check the shared database setup and try again."
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handlePasswordReset = async () => {
+    setError("");
+    setMessage("");
+    setBusy(true);
+    try {
+      const { error: resetError } = await getSupabase().auth.resetPasswordForEmail(
+        getAdminLoginEmail(),
+        {
+          redirectTo: `${window.location.origin}/admin-reset-password`,
+        }
+      );
+      if (resetError) throw resetError;
+      setMessage("If the admin account is registered, a reset link will be sent to its email.");
+    } catch (resetError) {
+      setError(
+        resetError instanceof Error
+          ? resetError.message
+          : "Unable to send the password reset email."
       );
     } finally {
       setBusy(false);
@@ -94,6 +122,11 @@ function AdminLogin() {
             {error}
           </p>
         )}
+        {message && (
+          <p className="auth-message auth-success" role="status">
+            {message}
+          </p>
+        )}
 
         <form onSubmit={handleLogin}>
           <label htmlFor="admin-username">Admin Username</label>
@@ -119,12 +152,22 @@ function AdminLogin() {
           />
 
           <button type="submit" disabled={busy}>
-            {busy ? "Signing in…" : "Login to Admin Panel →"}
+            {busy ? "Please wait…" : "Login to Admin Panel →"}
           </button>
         </form>
 
         <button
+          className="forgot-password"
+          type="button"
+          onClick={handlePasswordReset}
+          disabled={busy}
+        >
+          Forgot admin password?
+        </button>
+
+        <button
           className="back-student"
+          type="button"
           onClick={goToStudentLogin}
         >
           ← Back to Student Login

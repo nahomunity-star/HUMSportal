@@ -259,7 +259,8 @@ export default function ManageClasses() {
     } catch (error) {
       window.dispatchEvent(
         new CustomEvent("hums-cloud-error", {
-          detail: error instanceof Error ? error.message : "Unable to delete class.",
+          detail:
+            error instanceof Error ? error.message : "Unable to delete class.",
         })
       );
       return;

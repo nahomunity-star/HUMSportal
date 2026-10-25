@@ -96,11 +96,15 @@ function ManageAnnouncements() {
     } catch (error) {
       window.dispatchEvent(
         new CustomEvent("hums-cloud-error", {
-          detail: error instanceof Error ? error.message : "Unable to delete announcement.",
+          detail:
+            error instanceof Error
+              ? error.message
+              : "Unable to delete announcement.",
         })
       );
       return;
     }
+
     const updatedAnnouncements = announcements.filter(
       (announcement) => announcement.id !== id
     );

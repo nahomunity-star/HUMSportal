@@ -27,7 +27,9 @@ Deno.serve(async (request) => {
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   if (!authorization || !supabaseUrl || !anonKey || !serviceRoleKey) {
-    return respond(500, { error: "Student account provisioning is not configured." });
+    return respond(500, {
+      error: "Student account provisioning is not configured.",
+    });
   }
 
   const userClient = createClient(supabaseUrl, anonKey, {
@@ -69,14 +71,19 @@ Deno.serve(async (request) => {
     !/^[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)*$/.test(studentId)
   ) {
     return respond(400, {
-      error: "Student ID must use letters, numbers, underscores, or hyphens; dots cannot be consecutive or at either end.",
+      error:
+        "Student ID must use letters, numbers, underscores, or hyphens; dots cannot be consecutive or at either end.",
     });
   }
   if (password.length < 8) {
-    return respond(400, { error: "Student password must be at least 8 characters." });
+    return respond(400, {
+      error: "Student password must be at least 8 characters.",
+    });
   }
   if (!name || !["9", "10", "11", "12"].includes(grade)) {
-    return respond(400, { error: "Student name and a valid grade are required." });
+    return respond(400, {
+      error: "Student name and a valid grade are required.",
+    });
   }
 
   const { data: existingRows, error: existingError } = await adminClient
@@ -85,40 +92,61 @@ Deno.serve(async (request) => {
     .eq("record_type", "students");
   if (existingError) {
     console.error("Unable to check for an existing student.", existingError);
-    return respond(500, { error: "Unable to check whether this student ID is already registered." });
+    return respond(500, {
+      error: "Unable to check whether this student ID is already registered.",
+    });
   }
-  if (existingRows?.some((row) => row.record_id.toLowerCase() === studentId.toLowerCase())) {
-    return respond(409, { error: "This student ID already exists in the shared database." });
+  if (
+    existingRows?.some(
+      (row) => row.record_id.toLowerCase() === studentId.toLowerCase()
+    )
+  ) {
+    return respond(409, {
+      error: "This student ID already exists in the shared database.",
+    });
   }
 
   const email = `student-${studentId.toLowerCase()}@students.hums.invalid`;
-  const { data: created, error: createError } = await adminClient.auth.admin.createUser({
-    email,
-    password,
-    email_confirm: true,
-    user_metadata: { role: "student", student_id: studentId },
-  });
+  const { data: created, error: createError } =
+    await adminClient.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: { role: "student", student_id: studentId },
+    });
   if (createError || !created.user) {
     console.error("Unable to create student login.", createError);
-    return respond(400, { error: createError?.message ?? "Unable to create student login." });
+    return respond(400, {
+      error: createError?.message ?? "Unable to create student login.",
+    });
   }
 
   const { password: _password, ...safeStudent } = student;
-  const { error: insertError } = await adminClient.from("portal_records").insert({
-    record_type: "students",
-    record_id: studentId,
-    owner_id: created.user.id,
-    grade,
-    stream: String(student?.stream ?? ""),
-    data: { ...safeStudent, id: studentId },
-  });
+  const { error: insertError } = await adminClient
+    .from("portal_records")
+    .insert({
+      record_type: "students",
+      record_id: studentId,
+      owner_id: created.user.id,
+      grade,
+      stream: String(student?.stream ?? ""),
+      data: { ...safeStudent, id: studentId },
+    });
   if (insertError) {
-    const { error: cleanupError } = await adminClient.auth.admin.deleteUser(created.user.id);
+    const { error: cleanupError } = await adminClient.auth.admin.deleteUser(
+      created.user.id
+    );
     if (cleanupError) {
-      console.error("Unable to roll back student auth user after a record insert failure.", cleanupError);
+      console.error(
+        "Unable to roll back student auth user after a record insert failure.",
+        cleanupError
+      );
     }
     console.error("Unable to save student record.", insertError);
-    return respond(500, { error: "Student account was created but the student record could not be saved." });
+    return respond(500, {
+      error:
+        "Student account was created but the student record could not be saved.",
+    });
   }
 
   return respond(201, { id: studentId, userId: created.user.id });

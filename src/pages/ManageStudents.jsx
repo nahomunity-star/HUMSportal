@@ -96,8 +96,8 @@ function ManageStudents() {
       return;
     }
 
-    if (file.size > 2 * 1024 * 1024) {
-      alert("Please choose an image smaller than 2 MB.");
+    if (file.size > 512 * 1024) {
+      alert("Please choose an image smaller than 512 KB so it can be stored with the student record.");
       event.target.value = "";
       return;
     }
@@ -140,10 +140,7 @@ function ManageStudents() {
     setFormError("");
     try {
       await createPortalStudent(student);
-      setStudents((current) => [
-        ...current,
-        { ...student, password: "" },
-      ]);
+      setStudents((current) => [...current, { ...student, password: "" }]);
       setFormData((current) => ({ ...current, password: "" }));
       setShowForm(false);
     } catch (error) {
@@ -166,7 +163,8 @@ function ManageStudents() {
     } catch (error) {
       window.dispatchEvent(
         new CustomEvent("hums-cloud-error", {
-          detail: error instanceof Error ? error.message : "Unable to delete student.",
+          detail:
+            error instanceof Error ? error.message : "Unable to delete student.",
         })
       );
       return;

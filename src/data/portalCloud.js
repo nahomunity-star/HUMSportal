@@ -109,10 +109,30 @@ export async function loadPortalData() {
   }
   localStorage.setItem(
     STORAGE_KEYS.schedules,
-    JSON.stringify(toScheduleData(rows.filter((row) => row.record_type === "schedules")))
+    JSON.stringify(
+      toScheduleData(rows.filter((row) => row.record_type === "schedules"))
+    )
   );
   notifyCloudHydration();
   return rows;
+}
+
+async function createStudentAccount(student) {
+  const { data, error } = await getSupabase().functions.invoke(
+    "create-student",
+    { body: { student } }
+  );
+  if (error) {
+    throw new Error(
+      `Unable to create student login for ${student.id}: ${error.message}`
+    );
+  }
+  if (!data?.id) {
+    throw new Error(
+      `Student login for ${student.id} was not confirmed by the database.`
+    );
+  }
+  return data;
 }
 
 async function upsertRecords(type, records, existingRows) {
@@ -185,22 +205,6 @@ async function upsertRecords(type, records, existingRows) {
   }
 }
 
-async function createStudentAccount(student) {
-  const { data, error } = await getSupabase().functions.invoke(
-    "create-student",
-    { body: { student } }
-  );
-  if (error) {
-    throw new Error(
-      `Unable to create student login for ${student.id}: ${error.message}`
-    );
-  }
-  if (!data?.id) {
-    throw new Error(`Student login for ${student.id} was not confirmed by the database.`);
-  }
-  return data;
-}
-
 export async function createPortalStudent(student) {
   if (!(await checkPortalAdmin())) {
     throw new Error("Administrator access is required to create student accounts.");
@@ -221,15 +225,14 @@ export async function syncLocalPortalData() {
   }
 
   for (const type of RECORD_TYPES) {
-    await upsertRecords(
-      type,
-      readLocalArray(STORAGE_KEYS[type]),
-      existingRows ?? []
-    );
+    await upsertRecords(type, readLocalArray(STORAGE_KEYS[type]), existingRows ?? []);
   }
+  const scheduleData = JSON.parse(
+    localStorage.getItem(STORAGE_KEYS.schedules) ?? "{}"
+  );
   await upsertRecords(
     "schedules",
-    scheduleRows(JSON.parse(localStorage.getItem(STORAGE_KEYS.schedules) ?? "{}")),
+    scheduleRows(scheduleData),
     existingRows ?? []
   );
   await loadPortalData();
@@ -238,6 +241,16 @@ export async function syncLocalPortalData() {
 }
 
 export async function deletePortalRecord(type, id) {
+  if (type === "students") {
+    const { error } = await getSupabase().functions.invoke("delete-student", {
+      body: { studentId: String(id) },
+    });
+    if (error) {
+      throw new Error(`Unable to delete shared student ${id}: ${error.message}`);
+    }
+    return;
+  }
+
   const { error } = await getSupabase()
     .from("portal_records")
     .delete()
